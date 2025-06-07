@@ -15,9 +15,8 @@ import {
 	Text,
 	useColorModeValue,
 } from '@chakra-ui/react';
-import { HSeparator } from 'components/separator/Separator';
 import DefaultAuth from 'layouts/auth/Default';
-import illustration from 'assets/img/auth/auth.png';
+import illustration from 'assets/img/auth/auth1.png';
 import { MdOutlineRemoveRedEye } from 'react-icons/md';
 import { RiEyeCloseLine } from 'react-icons/ri';
 
@@ -26,7 +25,7 @@ const baseUrl = process.env.REACT_APP_BASE_URL;
 function SignIn() {
 	const textColor = useColorModeValue('navy.700', 'white');
 	const textColorSecondary = 'gray.400';
-	const brandStars = useColorModeValue('brand.500', 'brand.400');
+	const brandStars = useColorModeValue('#045e14', '#045e14');
 	const [show, setShow] = useState(false);
 	const [emailOrMobile, setEmailOrMobile] = useState('');
 	const [password, setPassword] = useState('');
@@ -44,9 +43,6 @@ function SignIn() {
 			// Determine if input is email or mobile
 			const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailOrMobile);
 			const formattedMobile = emailOrMobile.replace(/\D/g, '');
-			// const payload = isEmail
-			//   ? { email: emailOrMobile, password }
-			//   : { mobile: formattedMobile.length === 10 ? `${formattedMobile}` : formattedMobile, password };
 			const identifier = isEmail
 				? emailOrMobile
 				: formattedMobile.length === 10
@@ -128,7 +124,7 @@ function SignIn() {
 						fontWeight="400"
 						fontSize="md"
 					>
-						Enter your email/mobile and password to sign in!
+						Enter your email and password to sign in!
 					</Text>
 				</Box>
 				<Flex
@@ -142,13 +138,6 @@ function SignIn() {
 					me="auto"
 					mb={{ base: '20px', md: 'auto' }}
 				>
-					<Flex align="center" mb="25px">
-						<HSeparator />
-						<Text color="gray.400" mx="14px">
-							or
-						</Text>
-						<HSeparator />
-					</Flex>
 					<FormControl>
 						<FormLabel
 							display="flex"
@@ -158,7 +147,7 @@ function SignIn() {
 							color={textColor}
 							mb="8px"
 						>
-							Email or Mobile<Text color={brandStars}>*</Text>
+							Email<Text color={brandStars}>*</Text>
 						</FormLabel>
 						<Input
 							isRequired={true}
@@ -166,7 +155,7 @@ function SignIn() {
 							fontSize="sm"
 							ms={{ base: '0px', md: '0px' }}
 							type="text"
-							placeholder="mail@simmmple.com or 1234567890"
+							placeholder="mail@gmail.com"
 							mb="24px"
 							fontWeight="500"
 							size="lg"
