@@ -1,12 +1,13 @@
 import React from 'react';
 import { Icon } from '@chakra-ui/react';
 import {
-  // MdBarChart,
   MdPerson,
   MdHome,
   MdLock,
-  // MdOutlineShoppingCart,
-	MdRestaurantMenu,
+  MdInfo,
+	MdPrivacyTip,
+	MdEmergency,
+	MdPersonAddAlt1,
 } from 'react-icons/md';
 
 // Admin Imports
@@ -15,16 +16,20 @@ import MainDashboard from 'views/admin/dashboard';
 // import Profile from 'views/admin/profile';
 // import DataTables from 'views/admin/dataTables';
 import Users from 'views/admin/User';
-import SubAdmin from 'views/admin/SubAdmin';
-import Restaurant from 'views/admin/Restaurant';
-import CreateRestaurant from 'views/admin/CreateRestaurant';
-import CreateSubadmin from 'views/admin/CreateSubadmin';
-import CodOrders from 'views/admin/codOrders';
-import OnlineOrders from 'views/admin/onlineOrders';
+import ServiceProvider from 'views/admin/ServiceProvider';
+import AddAboutus from 'views/admin/addAboutUs';
+import AddTermsConditions from 'views/admin/addTermsCondition';
+import AddPrivacyPolicy from 'views/admin/addPrivacyPolicy';
+import Biding from 'views/admin/Biding';
+import DirectHiring from 'views/admin/directHiring';
+import Emergency from 'views/admin/emergencyHiring';
+// import SubAdmin from 'views/admin/SubAdmin';
+// import Restaurant from 'views/admin/Restaurant';
+// import OnlineOrders from 'views/admin/onlineOrders';
 
 // Auth Imports
 import SignInCentered from 'views/auth/signIn';
-import { FaUtensils } from 'react-icons/fa';
+import { FaFileContract, FaGavel,} from 'react-icons/fa';
 
 const routes = [
   {
@@ -41,6 +46,55 @@ const routes = [
     path: '/users',
     component: <Users />,
   },
+  {
+    name: 'Service Provider',
+    layout: '/admin',
+    icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
+    path: '/service_provider',
+    component: <ServiceProvider />,
+  },
+	 {
+    name: 'Biding Hiring',
+    layout: '/admin',
+    icon: <Icon as={FaGavel} width="20px" height="20px" color="inherit" />,
+    path: '/biding',
+    component: <Biding />,
+  },
+	 {
+    name: 'Direct Hiring',
+    layout: '/admin',
+    icon: <Icon as={MdPersonAddAlt1} width="20px" height="20px" color="inherit" />,
+    path: '/direct-hiring',
+    component: <DirectHiring />,
+  },
+	 {
+    name: 'Emergency Hiring',
+    layout: '/admin',
+    icon: <Icon as={MdEmergency} width="20px" height="20px" color="inherit" />,
+    path: '/emergency-hiring',
+    component: <Emergency />,
+  },
+  {
+    name: 'About Us',
+    layout: '/admin',
+    icon: <Icon as={MdInfo} width="20px" height="20px" color="inherit" />,
+    path: '/add-aboutus',
+    component: <AddAboutus />,
+  },
+	 {
+    name: 'Terms&Conditions',
+    layout: '/admin',
+    icon: <Icon as={FaFileContract} width="20px" height="20px" color="inherit" />,
+    path: '/add-terms-conditions',
+    component: <AddTermsConditions />,
+  },
+	 {
+    name: 'Privacy Policy',
+    layout: '/admin',
+    icon: <Icon as={MdPrivacyTip} width="20px" height="20px" color="inherit" />,
+    path: '/add-privacypolicy',
+    component: <AddPrivacyPolicy />,
+  },
   // {
   //   name: 'SubAdmins',
   //   layout: '/admin',
@@ -48,7 +102,7 @@ const routes = [
   //   path: '/subadmins',
   //   component: <SubAdmin />,
   // },
-	// {
+  // {
   //   name: 'Create SubAdmin',
   //   layout: '/admin',
   //   icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
@@ -71,14 +125,14 @@ const routes = [
   //   path: '/create-restaurant',
   //   component: <CreateRestaurant />,
   // },
-	//  {
+  //  {
   //   name: 'Cod Orders',
   //   layout: '/admin',
   //   icon: <Icon as={FaUtensils} width="20px" height="20px" color="inherit" />,
   //   path: '/cod-orders',
   //   component: <CodOrders />,
   // },
-	//  {
+  //  {
   //   name: 'Online Orders',
   //   layout: '/admin',
   //   icon: <Icon as={FaUtensils} width="20px" height="20px" color="inherit" />,
@@ -106,13 +160,6 @@ const routes = [
   //   icon: <Icon as={MdBarChart} width="20px" height="20px" color="inherit" />,
   //   path: '/data-tables',
   //   component: <DataTables />,
-  // },
-  // {
-  //   name: 'Profile',
-  //   layout: '/admin',
-  //   path: '/profile',
-  //   icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
-  //   component: <Profile />,
   // },
   {
     name: 'Sign In',

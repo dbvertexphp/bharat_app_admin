@@ -30,7 +30,7 @@ export default function UserReports() {
   // State for API data, loading, and error
   const [dashboardData, setDashboardData] = useState({
     users: 0,
-    sellers: 0,
+    service_provider: 0,
     restaurants: 0,
     codCollection: 0,
     onlineCollection: 0,
@@ -56,7 +56,7 @@ export default function UserReports() {
 
         setDashboardData({
           users: data.totalUsers ?? 0,
-          sellers: data.totalSeller ?? 0,
+          service_provider: data.totalSeller ?? 0,
           restaurants: data.totalRestaurants ?? 0,
 					codOrders: data.codOrders ?? 0,
 					onlineOrders: data.onlineOrders ?? 0,
@@ -121,8 +121,8 @@ export default function UserReports() {
               icon={<Icon as={MdPeople} w="32px" h="32px" color={brandColor} />}
             />
           }
-          name="Sellers"
-          value={dashboardData.sellers.toLocaleString()}
+          name="Service Provider"
+          value={dashboardData.service_provider.toLocaleString()}
         />
 				 <MiniStatistics
           startContent={

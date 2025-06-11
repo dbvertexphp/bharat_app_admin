@@ -231,25 +231,6 @@ export default function HeaderLinks(props) {
           </Flex>
         </MenuList>
       </Menu>
-
-      <Button
-        variant="no-hover"
-        bg="transparent"
-        p="0px"
-        minW="unset"
-        minH="unset"
-        h="18px"
-        w="max-content"
-        onClick={toggleColorMode}
-      >
-        <Icon
-          me="10px"
-          h="18px"
-          w="18px"
-          color={navbarIcon}
-          as={colorMode === 'light' ? IoMdMoon : IoMdSunny}
-        />
-      </Button>
       <Menu>
         <MenuButton p="0px">
           <Avatar
@@ -293,14 +274,6 @@ export default function HeaderLinks(props) {
               px="14px"
             >
               <Text fontSize="sm">Profile Settings</Text>
-            </MenuItem>
-            <MenuItem
-              _hover={{ bg: 'none' }}
-              _focus={{ bg: 'none' }}
-              borderRadius="8px"
-              px="14px"
-            >
-              <Text fontSize="sm">Newsletter Settings</Text>
             </MenuItem>
             <MenuItem
               _hover={{ bg: 'none' }}
