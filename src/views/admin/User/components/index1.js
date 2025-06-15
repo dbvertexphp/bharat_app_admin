@@ -1,5 +1,4 @@
 /* eslint-disable */
-
 import {
   Box,
   Flex,
@@ -30,9 +29,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { ArrowUpIcon, ArrowDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; // Move this to App.js or index.js if possible
 
 const columnHelper = createColumnHelper();
 
@@ -43,118 +41,95 @@ const useFetchUsers = (baseUrl, token, navigate) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-	const fetchData = async () => {
-	  try {
-		if (!baseUrl || !token) {
-		  throw new Error('Missing API URL or authentication token');
-		}
-		const response = await axios.get(`${baseUrl}api/admin/getAllUsers`, {
-		  headers: { Authorization: `Bearer ${token}` },
-		});
-		if (!response.data?.users) {
-		  throw new Error('Invalid API response: No users found');
-		}
-		setData(
-		  response.data.users.map((user) => ({
-			id: user._id,
-			profile_pic: user.profile_pic ? `${baseUrl}${user.profile_pic}` : 'N/A',
-			full_name: user.full_name || 'N/A',
-			location: user.location || 'N/A',
-			mobile: user.phone || 'N/A',
-			createdAt: user.createdAt
-			  ? new Date(user.createdAt).toISOString().split('T')[0]
-			  : 'N/A',
-						referral_code: user.referral_code || 'N/A',
-			active: user.active ?? true,
-		  }))
-		);
-	  } catch (error) {
-		console.error('Error fetching data:', error);
-		const errorMessage =
-		  error.response?.data?.message || error.message || 'Failed to load data';
-		if (errorMessage.includes('Session expired')) {
-		  localStorage.removeItem('token');
-		  navigate('/');
-		} else if (errorMessage.includes('Un-Authorized')){
-					localStorage.removeItem('token');
-		  navigate('/');
-				} else {
-		  setError(errorMessage);
-		}
-	  } finally {
-		setLoading(false);
-	  }
-	};
-	fetchData();
+    const fetchData = async () => {
+      try {
+        if (!baseUrl || !token) {
+          throw new Error('Missing API URL or authentication token');
+        }
+        const response = await axios.get(`${baseUrl}api/admin/getAllUsers`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.data?.users) {
+          throw new Error('Invalid API response: No users found');
+        }
+        setData(
+          response.data.users.map((user) => ({
+            id: user._id,
+            profile_pic: user.profile_pic ? `${baseUrl}${user.profile_pic}` : 'N/A',
+            full_name: user.full_name || 'N/A',
+            location: user.location || 'N/A',
+            mobile: user.phone || 'N/A',
+            createdAt: user.createdAt
+              ? new Date(user.createdAt).toISOString().split('T')[0]
+              : 'N/A',
+            referral_code: user.referral_code || 'N/A',
+            active: user.active ?? true,
+          }))
+        );
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        const errorMessage =
+          error.response?.data?.message || error.message || 'Failed to load data';
+        if (errorMessage.includes('Session expired')) {
+          localStorage.removeItem('token');
+          navigate('/');
+        } else if (errorMessage.includes('Un-Authorized')) {
+          localStorage.removeItem('token');
+          navigate('/');
+        } else {
+          setError(errorMessage);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, [baseUrl, token, navigate]);
 
   return { data, loading, error, setData, setError };
 };
 
 // Function to toggle user status
-// const toggleUserStatus = async (baseUrl, token, userId, active, setData, setError) => {
-//   try {
-//     const response = await axios.patch(
-//       `${baseUrl}api/admin/updateUserStatus`,
-//       { userId, active: !active },
-//       { headers: { Authorization: `Bearer ${token}` } }
-//     );
-//     if (response.data.success) {
-//       setData((prevData) =>
-//         prevData.map((user) =>
-//           user.id === userId ? { ...user, active: !active } : user
-//         )
-//       );
-//       return true;
-//     } else {
-//       throw new Error('Failed to update user status');
-//     }
-//   } catch (error) {
-//     console.error('Error toggling user status:', error);
-//     setError(error.response?.data?.message || 'Failed to update user status');
-//     return false;
-//   }
-// };
-
 const toggleUserStatus = async (baseUrl, token, userId, active, setData, setError) => {
   try {
-	const response = await axios.patch(
-	  `${baseUrl}api/admin/updateUserStatus`,
-	  { userId, active: !active },
-	  { headers: { Authorization: `Bearer ${token}` } }
-	);
-	if (response.data.success) {
-	  setData((prevData) =>
-		prevData.map((user) =>
-		  user.id === userId ? { ...user, active: !active } : user
-		)
-	  );
-	  // Display success toast
-	  toast.success('User status updated successfully!', {
-		position: 'top-right',
-		autoClose: 3000, // Close after 3 seconds
-		hideProgressBar: false,
-		closeOnClick: true,
-		pauseOnHover: true,
-		draggable: true,
-	  });
-	  return true;
-	} else {
-	  throw new Error('Failed to update user status');
-	}
+    const response = await axios.patch(
+      `${baseUrl}api/admin/updateUserStatus`,
+      { userId, active: !active },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    console.log('Toggle response:', response.data); // Debug log
+    if (response.data.success) {
+      setData((prevData) =>
+        prevData.map((user) =>
+          user.id === userId ? { ...user, active: !active } : user
+        )
+      );
+      // Display success toast
+      toast.success('User status updated successfully!', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return true;
+    } else {
+      throw new Error('Failed to update user status');
+    }
   } catch (error) {
-	console.error('Error toggling user status:', error);
-	setError(error.response?.data?.message || 'Failed to update user status');
-	// Optional: Display error toast
-	toast.error(error.response?.data?.message || 'Failed to update user status', {
-	  position: 'top-right',
-	  autoClose: 3000,
-	  hideProgressBar: false,
-	  closeOnClick: true,
-	  pauseOnHover: true,
-	  draggable: true,
-	});
-	return false;
+    console.error('Error toggling user status:', error);
+    setError(error.response?.data?.message || 'Failed to update user status');
+    // Display error toast
+    toast.error(error.response?.data?.message || 'Failed to update user status', {
+      position: 'top-right',
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
+    return false;
   }
 };
 
@@ -173,22 +148,22 @@ export default function ComplexTable() {
 
   // Memoized toggle handler
   const handleToggle = useCallback(
-	async (userId, currentActive) => {
-	  if (toggleLoading[userId]) return;
+    async (userId, currentActive) => {
+      if (toggleLoading[userId]) return;
 
-	  setToggleLoading((prev) => ({ ...prev, [userId]: true }));
-	  const success = await toggleUserStatus(
-		baseUrl,
-		token,
-		userId,
-		currentActive,
-		setData,
-		setError
-	  );
-	  setToggleLoading((prev) => ({ ...prev, [userId]: false }));
-	  return success;
-	},
-	[baseUrl, token, setData, setError, toggleLoading]
+      setToggleLoading((prev) => ({ ...prev, [userId]: true }));
+      const success = await toggleUserStatus(
+        baseUrl,
+        token,
+        userId,
+        currentActive,
+        setData,
+        setError
+      );
+      setToggleLoading((prev) => ({ ...prev, [userId]: false }));
+      return success;
+    },
+    [baseUrl, token, setData, setError, toggleLoading]
   );
 
   // Pagination logic
@@ -200,313 +175,323 @@ export default function ComplexTable() {
 
   // Handle page navigation with validation
   const goToPage = useCallback(
-	(page) => {
-	  const newPage = Math.min(Math.max(1, page), totalPages);
-	  if (newPage !== currentPage) {
-		console.log(`Navigating to page ${newPage}`); // Debug log
-		setCurrentPage(newPage);
-	  }
-	},
-	[currentPage, totalPages]
+    (page) => {
+      const newPage = Math.min(Math.max(1, page), totalPages);
+      if (newPage !== currentPage) {
+        console.log(`Navigating to page ${newPage}`);
+        setCurrentPage(newPage);
+      }
+    },
+    [currentPage, totalPages]
   );
 
   // Reset page to 1 when data changes significantly
   useEffect(() => {
-	if (totalPages > 0 && currentPage > totalPages) {
-	  console.log(`Resetting page to 1 due to totalPages: ${totalPages}`); // Debug log
-	  setCurrentPage(1);
-	}
+    if (totalPages > 0 && currentPage > totalPages) {
+      console.log(`Resetting page to 1 due to totalPages: ${totalPages}`);
+      setCurrentPage(1);
+    }
   }, [totalPages, currentPage]);
 
   // Memoized columns
   const columns = useMemo(
-	() => [
-	  columnHelper.accessor('profile_pic', {
-		id: 'profile_pic',
-		header: () => (
-		  <Text
-			justifyContent="space-between"
-			align="center"
-			fontSize={{ sm: '10px', lg: '12px' }}
-			color="gray.400"
-		  >
-			PROFILE PIC
-		  </Text>
-		),
-		cell: (info) => (
-		  <Flex align="center">
-			{info.getValue() !== 'N/A' ? (
-			  <img
-				src={info.getValue()}
-				alt="Profile"
-				loading="lazy"
-				style={{ width: '50px', height: '50px', borderRadius: '50%' }}
-				onError={(e) => (e.target.src = '/assets/img/profile/Project3.png')}
-			  />
-			) : (
-			  <Text color={textColor} fontSize="sm" fontWeight="700">
-				N/A
-			  </Text>
-			)}
-		  </Flex>
-		),
-	  }),
-	  columnHelper.accessor('full_name', {
-		id: 'full_name',
-		header: () => (
-		  <Text
-			justifyContent="space-between"
-			align="center"
-			fontSize={{ sm: '10px', lg: '12px' }}
-			color="gray.400"
-		  >
-			FULL NAME
-		  </Text>
-		),
-		cell: (info) => (
-		  <Text color={textColor} fontSize="sm" fontWeight="700">
-			{info.getValue()}
-		  </Text>
-		),
-	  }),
-	  columnHelper.accessor('location', {
-		id: 'location',
-		header: () => (
-		  <Text
-			justifyContent="space-between"
-			align="center"
-			fontSize={{ sm: '10px', lg: '12px' }}
-			color="gray.400"
-		  >
-			LOCATION
-		  </Text>
-		),
-		cell: (info) => (
-		  <Text color={textColor} fontSize="sm" fontWeight="700">
-			{info.getValue()}
-		  </Text>
-		),
-	  }),
-	  columnHelper.accessor('mobile', {
-		id: 'mobile',
-		header: () => (
-		  <Text
-			justifyContent="space-between"
-			align="center"
-			fontSize={{ sm: '10px', lg: '12px' }}
-			color="gray.400"
-		  >
-			MOBILE
-		  </Text>
-		),
-		cell: (info) => (
-		  <Text color={textColor} fontSize="sm" fontWeight="700">
-			{info.getValue()}
-		  </Text>
-		),
-	  }),
-			columnHelper.accessor('referral_code', {
-		id: 'referral_code',
-		header: () => (
-		  <Text
-			justifyContent="space-between"
-			align="center"
-			fontSize={{ sm: '10px', lg: '12px' }}
-			color="gray.400"
-		  >
-		   REFERRAL CODE
-		  </Text>
-		),
-		cell: (info) => (
-		  <Text color={textColor} fontSize="sm" fontWeight="700">
-			{info.getValue()}
-		  </Text>
-		),
-	  }),
-	  columnHelper.accessor('createdAt', {
-		id: 'createdAt',
-		header: () => (
-		  <Text
-			justifyContent="space-between"
-			align="center"
-			fontSize={{ sm: '10px', lg: '12px' }}
-			color="gray.400"
-		  >
-			CREATED AT
-		  </Text>
-		),
-		cell: (info) => (
-		  <Text color={textColor} fontSize="sm" fontWeight="700">
-			{info.getValue()}
-		  </Text>
-		),
-	  }),
-	  columnHelper.accessor('active', {
-		id: 'active',
-		header: () => (
-		  <Text
-			justifyContent="space-between"
-			align="center"
-			fontSize={{ sm: '10px', lg: '12px' }}
-			color="gray.400"
-		  >
-			ACTIVE
-		  </Text>
-		),
-		cell: (info) => (
-		  <Switch
-			isChecked={info.getValue()}
-			onChange={() => handleToggle(info.row.original.id, info.getValue())}
-			colorScheme="teal"
-			isDisabled={toggleLoading[info.row.original.id]}
-		  />
-		),
-	  }),
-	],
-	[textColor, handleToggle, toggleLoading]
+    () => [
+      columnHelper.accessor('profile_pic', {
+        id: 'profile_pic',
+        header: () => (
+          <Text
+            justifyContent="space-between"
+            align="center"
+            fontSize={{ sm: '10px', lg: '12px' }}
+            color="gray.400"
+          >
+            PROFILE PIC
+          </Text>
+        ),
+        cell: (info) => (
+          <Flex align="center">
+            {info.getValue() !== 'N/A' ? (
+              <img
+                src={info.getValue()}
+                alt="Profile"
+                loading="lazy"
+                style={{ width: '50px', height: '50px', borderRadius: '50%' }}
+                onError={(e) => (e.target.src = '/assets/img/profile/Project3.png')}
+              />
+            ) : (
+              <Text color={textColor} fontSize="sm" fontWeight="700">
+                N/A
+              </Text>
+            )}
+          </Flex>
+        ),
+      }),
+      columnHelper.accessor('full_name', {
+        id: 'full_name',
+        header: () => (
+          <Text
+            justifyContent="space-between"
+            align="center"
+            fontSize={{ sm: '10px', lg: '12px' }}
+            color="gray.400"
+          >
+            FULL NAME
+          </Text>
+        ),
+        cell: (info) => (
+          <Text color={textColor} fontSize="sm" fontWeight="700">
+            {info.getValue()}
+          </Text>
+        ),
+      }),
+      columnHelper.accessor('location', {
+        id: 'location',
+        header: () => (
+          <Text
+            justifyContent="space-between"
+            align="center"
+            fontSize={{ sm: '10px', lg: '12px' }}
+            color="gray.400"
+          >
+            LOCATION
+          </Text>
+        ),
+        cell: (info) => (
+          <Text color={textColor} fontSize="sm" fontWeight="700">
+            {info.getValue()}
+          </Text>
+        ),
+      }),
+      columnHelper.accessor('mobile', {
+        id: 'mobile',
+        header: () => (
+          <Text
+            justifyContent="space-between"
+            align="center"
+            fontSize={{ sm: '10px', lg: '12px' }}
+            color="gray.400"
+          >
+            MOBILE
+          </Text>
+        ),
+        cell: (info) => (
+          <Text color={textColor} fontSize="sm" fontWeight="700">
+            {info.getValue()}
+          </Text>
+        ),
+      }),
+      columnHelper.accessor('referral_code', {
+        id: 'referral_code',
+        header: () => (
+          <Text
+            justifyContent="space-between"
+            align="center"
+            fontSize={{ sm: '10px', lg: '12px' }}
+            color="gray.400"
+          >
+            REFERRAL CODE
+          </Text>
+        ),
+        cell: (info) => (
+          <Text color={textColor} fontSize="sm" fontWeight="700">
+            {info.getValue()}
+          </Text>
+        ),
+      }),
+      columnHelper.accessor('createdAt', {
+        id: 'createdAt',
+        header: () => (
+          <Text
+            justifyContent="space-between"
+            align="center"
+            fontSize={{ sm: '10px', lg: '12px' }}
+            color="gray.400"
+          >
+            CREATED AT
+          </Text>
+        ),
+        cell: (info) => (
+          <Text color={textColor} fontSize="sm" fontWeight="700">
+            {info.getValue()}
+          </Text>
+        ),
+      }),
+      columnHelper.accessor('active', {
+        id: 'active',
+        header: () => (
+          <Text
+            justifyContent="space-between"
+            align="center"
+            fontSize={{ sm: '10px', lg: '12px' }}
+            color="gray.400"
+          >
+            ACTIVE
+          </Text>
+        ),
+        cell: (info) => (
+          <Switch
+            isChecked={info.getValue()}
+            onChange={() => handleToggle(info.row.original.id, info.getValue())}
+            colorScheme="teal"
+            isDisabled={toggleLoading[info.row.original.id]}
+          />
+        ),
+      }),
+    ],
+    [textColor, handleToggle, toggleLoading]
   );
 
   const table = useReactTable({
-	data: paginatedData,
-	columns,
-	state: { sorting, pagination: { pageIndex: currentPage - 1, pageSize: itemsPerPage } },
-	onSortingChange: setSorting,
-	getCoreRowModel: getCoreRowModel(),
-	getSortedRowModel: getSortedRowModel(),
-	manualPagination: true, // Enable manual pagination
-	pageCount: totalPages,
+    data: paginatedData,
+    columns,
+    state: { sorting, pagination: { pageIndex: currentPage - 1, pageSize: itemsPerPage } },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    manualPagination: true,
+    pageCount: totalPages,
   });
 
   if (loading) {
-	return (
-	  <Box textAlign="center" py={10}>
-		<Spinner size="lg" />
-	  </Box>
-	);
+    return (
+      <Box textAlign="center" py={10}>
+        <Spinner size="lg" />
+      </Box>
+    );
   }
 
   if (error) {
-	return (
-	  <Alert status="error" mb={4}>
-		<AlertIcon />
-		{error}
-	  </Alert>
-	);
+    return (
+      <Alert status="error" mb={4}>
+        <AlertIcon />
+        {error}
+      </Alert>
+    );
   }
 
   return (
-	<Card
-	  flexDirection="column"
-	  w="100%"
-	  px="0px"
-	  overflowX={{ sm: 'scroll', lg: 'hidden' }}
-	>
-	  <Flex px="25px" mb="8px" justifyContent="space-between" align="center">
-		<Text
-		  color={textColor}
-		  fontSize="22px"
-		  fontWeight="700"
-		  lineHeight="100%"
-		>
-		  Users Table
-		</Text>
-	  </Flex>
-	  <Box>
-		<Table variant="simple" color="gray.500" mb="24px" mt="12px">
-		  <Thead>
-			{table.getHeaderGroups().map((headerGroup) => (
-			  <Tr key={headerGroup.id}>
-				{headerGroup.headers.map((header) => (
-				  <Th
-					key={header.id}
-					colSpan={header.colSpan}
-					pe="10px"
-					borderColor={borderColor}
-					cursor="pointer"
-					onClick={header.column.getToggleSortingHandler()}
-					aria-sort={
-					  header.column.getIsSorted()
-						? header.column.getIsSorted() === 'asc'
-						  ? 'ascending'
-						  : 'descending'
-						: 'none'
-					}
-				  >
-					<Flex
-					  justifyContent="space-between"
-					  align="center"
-					  fontSize={{ sm: '10px', lg: '12px' }}
-					  color="gray.400"
-					>
-					  {flexRender(
-						header.column.columnDef.header,
-						header.getContext()
-					  )}
-					  {header.column.getIsSorted() ? (
-						header.column.getIsSorted() === 'asc' ? (
-						  <ArrowUpIcon ml={1} />
-						) : (
-						  <ArrowDownIcon ml={1} />
-						)
-					  ) : null}
-					</Flex>
-				  </Th>
-				))}
-			  </Tr>
-			))}
-		  </Thead>
-		  <Tbody>
-			{table.getRowModel().rows.map((row) => (
-			  <Tr key={row.id}>
-				{row.getVisibleCells().map((cell) => (
-				  <Td
-					key={cell.id}
-					fontSize={{ sm: '14px' }}
-					minW={{ sm: '150px', md: '200px', lg: 'auto' }}
-					borderColor="transparent"
-				  >
-					{flexRender(cell.column.columnDef.cell, cell.getContext())}
-				  </Td>
-				))}
-			  </Tr>
-			))}
-		  </Tbody>
-		</Table>
-	  </Box>
-	  {/* Pagination Controls */}
-	  <Flex justifyContent="space-between" alignItems="center" px="25px" py="10px">
-		<Text fontSize="sm" color={textColor}>
-		  Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} users
-		</Text>
-		<HStack>
-		  <Button
-			size="sm"
-			onClick={() => goToPage(currentPage - 1)}
-			isDisabled={currentPage === 1}
-			leftIcon={<ChevronLeftIcon />}
-		  >
-			Previous
-		  </Button>
-		  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-			<Button
-			  key={page}
-			  size="sm"
-			  onClick={() => goToPage(page)}
-			  variant={currentPage === page ? 'solid' : 'outline'}
-			>
-			  {page}
-			</Button>
-		  ))}
-		  <Button
-			size="sm"
-			onClick={() => goToPage(currentPage + 1)}
-			isDisabled={currentPage === totalPages}
-			rightIcon={<ChevronRightIcon />}
-		  >
-			Next
-		  </Button>
-		</HStack>
-	  </Flex>
-	</Card>
+    <Card
+      flexDirection="column"
+      w="100%"
+      px="0px"
+      overflowX={{ sm: 'scroll', lg: 'hidden' }}
+    >
+      <Flex px="25px" mb="8px" justifyContent="space-between" align="center">
+        <Text
+          color={textColor}
+          fontSize="22px"
+          fontWeight="700"
+          lineHeight="100%"
+        >
+          Users Table
+        </Text>
+      </Flex>
+      <Box>
+        <Table variant="simple" color="gray.500" mb="24px" mt="12px">
+          <Thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <Tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <Th
+                    key={header.id}
+                    colSpan={header.colSpan}
+                    pe="10px"
+                    borderColor={borderColor}
+                    cursor="pointer"
+                    onClick={header.column.getToggleSortingHandler()}
+                    aria-sort={
+                      header.column.getIsSorted()
+                        ? header.column.getIsSorted() === 'asc'
+                          ? 'ascending'
+                          : 'descending'
+                        : 'none'
+                    }
+                  >
+                    <Flex
+                      justifyContent="space-between"
+                      align="center"
+                      fontSize={{ sm: '10px', lg: '12px' }}
+                      color="gray.400"
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                      {header.column.getIsSorted() ? (
+                        header.column.getIsSorted() === 'asc' ? (
+                          <ArrowUpIcon ml={1} />
+                        ) : (
+                          <ArrowDownIcon ml={1} />
+                        )
+                      ) : null}
+                    </Flex>
+                  </Th>
+                ))}
+              </Tr>
+            ))}
+          </Thead>
+          <Tbody>
+            {table.getRowModel().rows.map((row) => (
+              <Tr key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <Td
+                    key={cell.id}
+                    fontSize={{ sm: '14px' }}
+                    minW={{ sm: '150px', md: '200px', lg: 'auto' }}
+                    borderColor="transparent"
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </Td>
+                ))}
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </Box>
+      {/* Pagination Controls */}
+      <Flex justifyContent="space-between" alignItems="center" px="25px" py="10px">
+        <Text fontSize="sm" color={textColor}>
+          Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} users
+        </Text>
+        <HStack>
+          <Button
+            size="sm"
+            onClick={() => goToPage(currentPage - 1)}
+            isDisabled={currentPage === 1}
+            leftIcon={<ChevronLeftIcon />}
+          >
+            Previous
+          </Button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <Button
+              key={page}
+              size="sm"
+              onClick={() => goToPage(page)}
+              variant={currentPage === page ? 'solid' : 'outline'}
+            >
+              {page}
+            </Button>
+          ))}
+          <Button
+            size="sm"
+            onClick={() => goToPage(currentPage + 1)}
+            isDisabled={currentPage === totalPages}
+            rightIcon={<ChevronRightIcon />}
+          >
+            Next
+          </Button>
+        </HStack>
+      </Flex>
+      {/* Add ToastContainer to render toasts */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme={useColorModeValue('light', 'dark')} // Integrate with Chakra's color mode
+      />
+    </Card>
   );
 }

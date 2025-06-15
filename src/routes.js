@@ -8,6 +8,8 @@ import {
 	MdPrivacyTip,
 	MdEmergency,
 	MdPersonAddAlt1,
+	MdCategory,
+	MdAttachMoney,
 } from 'react-icons/md';
 
 // Admin Imports
@@ -23,8 +25,8 @@ import AddPrivacyPolicy from 'views/admin/addPrivacyPolicy';
 import Biding from 'views/admin/Biding';
 import DirectHiring from 'views/admin/directHiring';
 import Emergency from 'views/admin/emergencyHiring';
-// import SubAdmin from 'views/admin/SubAdmin';
-// import Restaurant from 'views/admin/Restaurant';
+import WorkCategory from 'views/admin/workCategory';
+import PlatformFee from 'views/admin/platformfee';
 // import OnlineOrders from 'views/admin/onlineOrders';
 
 // Auth Imports
@@ -52,6 +54,20 @@ const routes = [
     icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
     path: '/service_provider',
     component: <ServiceProvider />,
+  },
+	{
+    name: 'Work Category',
+    layout: '/admin',
+    icon: <Icon as={MdCategory} width="20px" height="20px" color="inherit" />,
+    path: '/work_category',
+    component: <WorkCategory />,
+  },
+		{
+    name: 'Platform Fees',
+    layout: '/admin',
+    icon: <Icon as={MdAttachMoney} width="20px" height="20px" color="inherit" />,
+    path: '/platform_fee',
+    component: <PlatformFee />,
   },
 	 {
     name: 'Biding Hiring',
@@ -95,72 +111,6 @@ const routes = [
     path: '/add-privacypolicy',
     component: <AddPrivacyPolicy />,
   },
-  // {
-  //   name: 'SubAdmins',
-  //   layout: '/admin',
-  //   icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
-  //   path: '/subadmins',
-  //   component: <SubAdmin />,
-  // },
-  // {
-  //   name: 'Create SubAdmin',
-  //   layout: '/admin',
-  //   icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
-  //   path: '/create-subadmin',
-  //   component: <CreateSubadmin />,
-  // },
-  // {
-  //   name: 'Restaurants',
-  //   layout: '/admin',
-  //   icon: (
-  //     <Icon as={MdRestaurantMenu} width="20px" height="20px" color="inherit" />
-  //   ),
-  //   path: '/restaurants',
-  //   component: <Restaurant />,
-  // },
-  // {
-  //   name: 'Add Restaurant',
-  //   layout: '/admin',
-  //   icon: <Icon as={FaUtensils} width="20px" height="20px" color="inherit" />,
-  //   path: '/create-restaurant',
-  //   component: <CreateRestaurant />,
-  // },
-  //  {
-  //   name: 'Cod Orders',
-  //   layout: '/admin',
-  //   icon: <Icon as={FaUtensils} width="20px" height="20px" color="inherit" />,
-  //   path: '/cod-orders',
-  //   component: <CodOrders />,
-  // },
-  //  {
-  //   name: 'Online Orders',
-  //   layout: '/admin',
-  //   icon: <Icon as={FaUtensils} width="20px" height="20px" color="inherit" />,
-  //   path: '/online-orders',
-  //   component: <OnlineOrders />,
-  // },
-  // {
-  //   name: 'NFT Marketplace',
-  //   layout: '/admin',
-  //   path: '/nft-marketplace',
-  //   icon: (
-  //     <Icon
-  //       as={MdOutlineShoppingCart}
-  //       width="20px"
-  //       height="20px"
-  //       color="inherit"
-  //     />
-  //   ),
-  //   component: <NFTMarketplace />,
-  //   secondary: true,
-  // },
-  // {
-  //   name: 'Data Tables',
-  //   layout: '/admin',
-  //   icon: <Icon as={MdBarChart} width="20px" height="20px" color="inherit" />,
-  //   path: '/data-tables',
-  //   component: <DataTables />,
-  // },
   {
     name: 'Sign In',
     layout: '/', // Updated for navigation purposes
