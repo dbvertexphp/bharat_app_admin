@@ -16,11 +16,11 @@ import {
   MdAddTask,
   MdAttachMoney,
   MdPeople,
-  MdRestaurant,
   MdMoney,
 } from "react-icons/md";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { FaFileInvoiceDollar } from "react-icons/fa";
 
 export default function UserReports() {
   // Chakra Color Mode
@@ -58,7 +58,7 @@ export default function UserReports() {
           users: data.totalUsers ?? 0,
           service_provider: data.totalSeller ?? 0,
           restaurants: data.totalRestaurants ?? 0,
-					codOrders: data.codOrders ?? 0,
+					directOrder: data.totalDirectOrder ?? 0,
 					onlineOrders: data.onlineOrders ?? 0,
           codCollection: data.codCollection ?? 0,
           onlineCollection: data.onlineCollection ?? 0,
@@ -127,11 +127,11 @@ export default function UserReports() {
 				 <MiniStatistics
           startContent={
             <IconBox w="56px" h="56px" bg={boxBg}
-              icon={<Icon as={MdMoney} w="32px" h="32px" color={brandColor} />}
+              icon={<Icon as={FaFileInvoiceDollar} w="32px" h="32px" color={brandColor} />}
             />
           }
-          name="COD Orders"
-          value={`${dashboardData.codOrders}`}
+          name="Direct Orders"
+          value={`${dashboardData.directOrder}`}
         />
 				 <MiniStatistics
           startContent={
