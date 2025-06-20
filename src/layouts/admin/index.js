@@ -8,6 +8,7 @@ import { SidebarContext } from 'contexts/SidebarContext';
 import React, { useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import routes from 'routes.js';
+import ViewOrder from 'views/admin/viewDirectOrder'
 
 
 // Custom Chakra theme
@@ -99,7 +100,7 @@ export default function Dashboard(props) {
       if (route.collapse) {
         return getRoutes(route.items);
       } else {
-        return null;
+        return <Route path='/viewOrder/:orderId' element={<ViewOrder />} />
       }
     });
   };

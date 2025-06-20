@@ -32,12 +32,13 @@ import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 import axios from 'axios';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // Custom components
@@ -51,6 +52,10 @@ export default function OrdersTable() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
   const [selectedOrder, setSelectedOrder] = React.useState(null);
+  const [pagination, setPagination] = React.useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
   const {
     isOpen: isDetailsOpen,
     onOpen: onDetailsOpen,
@@ -76,7 +81,6 @@ export default function OrdersTable() {
             headers: { Authorization: `Bearer ${token}` },
           },
         );
-        console.log('API Response (Orders):', response.data);
         if (!response.data || !Array.isArray(response.data.data)) {
           throw new Error(
             'Invalid response format: Expected an array of orders',
@@ -85,7 +89,7 @@ export default function OrdersTable() {
 
         const formattedData = response.data.data.map((item) => ({
           id: item._id || '',
-          orderId: item.razorOrderIdPlatform || '',
+          orderId: item.project_id || '',
           customerName: item.user_id?.full_name || 'Unknown',
           serviceProvider: item.service_provider_id?.full_name || 'N/A',
           totalAmount: item.service_payment?.total_expected || 0,
@@ -96,12 +100,12 @@ export default function OrdersTable() {
           createdAt: item.createdAt
             ? new Date(item.createdAt).toLocaleDateString()
             : '',
-          address: item.address,
-          title: item.title,
-          description: item.description,
+          address: item.address || 'N/A',
+          title: item.title || 'N/A',
+          description: item.description || 'N/A',
           deadline: item.deadline
             ? new Date(item.deadline).toLocaleDateString()
-            : '',
+            : 'N/A',
           paymentHistory: item.service_payment?.payment_history || [],
         }));
 
@@ -127,7 +131,7 @@ export default function OrdersTable() {
     };
 
     fetchOrders();
-  }, [navigate]);
+  }, [baseUrl, token, navigate]);
 
   // Handle view details click
   const handleViewDetails = (order) => {
@@ -138,7 +142,7 @@ export default function OrdersTable() {
   // Status color mapping
   const getStatusStyles = (status, type) => {
     if (type === 'hireStatus') {
-      switch (status) {
+      switch (status.toLowerCase()) {
         case 'accepted':
           return { bg: 'green.100', color: 'green.800' };
         case 'pending':
@@ -149,7 +153,7 @@ export default function OrdersTable() {
           return { bg: 'gray.100', color: 'gray.800' };
       }
     } else if (type === 'paymentStatus') {
-      switch (status) {
+      switch (status.toLowerCase()) {
         case 'success':
           return { bg: 'green.100', color: 'green.800' };
         case 'pending':
@@ -173,7 +177,7 @@ export default function OrdersTable() {
           fontSize={{ sm: '10px', lg: '12px' }}
           color="gray.400"
         >
-          ORDER ID
+          PROJECT ID
         </Text>
       ),
       cell: (info) => (
@@ -224,26 +228,6 @@ export default function OrdersTable() {
         </Flex>
       ),
     }),
-    columnHelper.accessor('totalAmount', {
-      id: 'totalAmount',
-      header: () => (
-        <Text
-          justifyContent="space-between"
-          align="center"
-          fontSize={{ sm: '10px', lg: '12px' }}
-          color="gray.400"
-        >
-          TOTAL AMOUNT
-        </Text>
-      ),
-      cell: (info) => (
-        <Flex align="center">
-          <Text color={textColor} fontSize="sm" fontWeight="700">
-            ₹{info.getValue()}
-          </Text>
-        </Flex>
-      ),
-    }),
     columnHelper.accessor('paidAmount', {
       id: 'paidAmount',
       header: () => (
@@ -259,53 +243,10 @@ export default function OrdersTable() {
       cell: (info) => (
         <Flex align="center">
           <Text color={textColor} fontSize="sm" fontWeight="700">
-            ₹{info.getValue()}
+            ₹{info.getValue().toLocaleString()}
           </Text>
         </Flex>
       ),
-    }),
-    columnHelper.accessor('remainingAmount', {
-      id: 'remainingAmount',
-      header: () => (
-        <Text
-          justifyContent="space-between"
-          align="center"
-          fontSize={{ sm: '10px', lg: '12px' }}
-          color="gray.400"
-        >
-          REMAINING AMOUNT
-        </Text>
-      ),
-      cell: (info) => (
-        <Flex align="center">
-          <Text color={textColor} fontSize="sm" fontWeight="700">
-            ₹{info.getValue()}
-          </Text>
-        </Flex>
-      ),
-    }),
-    columnHelper.accessor('paymentStatus', {
-      id: 'paymentStatus',
-      header: () => (
-        <Text
-          justifyContent="space-between"
-          align="center"
-          fontSize={{ sm: '10px', lg: '12px' }}
-          color="gray.400"
-        >
-          PAYMENT STATUS
-        </Text>
-      ),
-      cell: (info) => {
-        const { bg, color } = getStatusStyles(info.getValue(), 'paymentStatus');
-        return (
-          <Flex align="center" bg={bg} px={2} py={1} borderRadius="md">
-            <Text fontSize="sm" color={color}>
-              {info.getValue()}
-            </Text>
-          </Flex>
-        );
-      },
     }),
     columnHelper.accessor('hireStatus', {
       id: 'hireStatus',
@@ -367,7 +308,7 @@ export default function OrdersTable() {
           <Button
             colorScheme="teal"
             size="sm"
-            onClick={() => handleViewDetails(row.original)}
+            onClick={() => navigate(`/admin/viewOrder/${row.original.id}`)}
           >
             View Details
           </Button>
@@ -379,11 +320,13 @@ export default function OrdersTable() {
   const table = useReactTable({
     data,
     columns,
-    state: { sorting },
+    state: { sorting, pagination },
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    debugTable: true,
+    getPaginationRowModel: getPaginationRowModel(),
+    debugTable: process.env.NODE_ENV === 'development',
   });
 
   if (loading) {
@@ -392,7 +335,7 @@ export default function OrdersTable() {
         flexDirection="column"
         w="100%"
         px="0px"
-        style={{ marginTop: "100px" }}
+        style={{ marginTop: '100px' }}
         overflowX={{ sm: 'scroll', lg: 'hidden' }}
       >
         <Text color={textColor} fontSize="22px" fontWeight="700" p="25px">
@@ -408,7 +351,7 @@ export default function OrdersTable() {
         flexDirection="column"
         w="100%"
         px="0px"
-        style={{ marginTop: "100px" }}
+        style={{ marginTop: '100px' }}
         overflowX={{ sm: 'scroll', lg: 'hidden' }}
       >
         <Text color={textColor} fontSize="22px" fontWeight="700" p="25px">
@@ -424,7 +367,7 @@ export default function OrdersTable() {
         flexDirection="column"
         w="100%"
         px="0px"
-        style={{ marginTop: "100px" }}
+        style={{ marginTop: '100px' }}
         overflowX={{ sm: 'scroll', lg: 'hidden' }}
       >
         <Flex px="25px" mb="20px" justify="space-between" align="center">
@@ -492,14 +435,56 @@ export default function OrdersTable() {
             </Tbody>
           </Table>
         </Box>
+        {/* Pagination Controls */}
+        <Flex
+          justify="space-between"
+          align="center"
+          px="25px"
+          py="10px"
+          borderTopWidth="1px"
+          borderColor={borderColor}
+        >
+          <Flex align="center" gap="2">
+            <Button
+              size="sm"
+              colorScheme="teal"
+              onClick={() => table.previousPage()}
+              isDisabled={!table.getCanPreviousPage()}
+            >
+              Previous
+            </Button>
+            <Button
+              size="sm"
+              colorScheme="teal"
+              onClick={() => table.nextPage()}
+              isDisabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+          </Flex>
+          <Text fontSize="sm" color={textColor}>
+            Page {table.getState().pagination.pageIndex + 1} of{' '}
+            {table.getPageCount() || 1}
+          </Text>
+        </Flex>
       </Card>
 
       {/* Details Modal */}
       {selectedOrder && (
         <Modal isOpen={isDetailsOpen} onClose={onDetailsClose} size="lg">
           <ModalOverlay />
-          <ModalContent borderRadius="xl" boxShadow="2xl" p={4} bg={useColorModeValue('white', 'gray.800')}>
-            <ModalHeader fontSize="2xl" fontWeight="bold" color={textColor} textAlign="center">
+          <ModalContent
+            borderRadius="xl"
+            boxShadow="2xl"
+            p={4}
+            bg={useColorModeValue('white', 'gray.800')}
+          >
+            <ModalHeader
+              fontSize="2xl"
+              fontWeight="bold"
+              color={textColor}
+              textAlign="center"
+            >
               Order Details
             </ModalHeader>
             <ModalCloseButton
@@ -508,96 +493,147 @@ export default function OrdersTable() {
               transition="all 0.2s ease-in-out"
             />
             <ModalBody>
-              <ChakraCard p={4} boxShadow="md" borderRadius="lg" bg={useColorModeValue('gray.50', 'gray.700')}>
+              <ChakraCard
+                p={4}
+                boxShadow="md"
+                borderRadius="lg"
+                bg={useColorModeValue('gray.50', 'gray.700')}
+              >
                 <VStack spacing={4} align="stretch">
                   <Grid templateColumns={{ base: '1fr', md: '150px 1fr' }} gap={4}>
                     <GridItem>
-                      <Text fontWeight="semibold" color={textColor}>Order ID:</Text>
+                      <Text fontWeight="semibold" color={textColor}>
+                        Order ID:
+                      </Text>
                     </GridItem>
                     <GridItem>
                       <Text color={textColor}>{selectedOrder.orderId}</Text>
                     </GridItem>
 
                     <GridItem>
-                      <Text fontWeight="semibold" color={textColor}>Customer:</Text>
+                      <Text fontWeight="semibold" color={textColor}>
+                        Customer:
+                      </Text>
                     </GridItem>
                     <GridItem>
                       <Text color={textColor}>{selectedOrder.customerName}</Text>
                     </GridItem>
 
                     <GridItem>
-                      <Text fontWeight="semibold" color={textColor}>Service Provider:</Text>
+                      <Text fontWeight="semibold" color={textColor}>
+                        Service Provider:
+                      </Text>
                     </GridItem>
                     <GridItem>
                       <Text color={textColor}>{selectedOrder.serviceProvider}</Text>
                     </GridItem>
 
                     <GridItem>
-                      <Text fontWeight="semibold" color={textColor}>Title:</Text>
+                      <Text fontWeight="semibold" color={textColor}>
+                        Title:
+                      </Text>
                     </GridItem>
                     <GridItem>
                       <Text color={textColor}>{selectedOrder.title}</Text>
                     </GridItem>
 
                     <GridItem>
-                      <Text fontWeight="semibold" color={textColor}>Description:</Text>
+                      <Text fontWeight="semibold" color={textColor}>
+                        Description:
+                      </Text>
                     </GridItem>
                     <GridItem>
                       <Text color={textColor}>{selectedOrder.description}</Text>
                     </GridItem>
 
                     <GridItem>
-                      <Text fontWeight="semibold" color={textColor}>Address:</Text>
+                      <Text fontWeight="semibold" color={textColor}>
+                        Address:
+                      </Text>
                     </GridItem>
                     <GridItem>
                       <Text color={textColor}>{selectedOrder.address}</Text>
                     </GridItem>
 
                     <GridItem>
-                      <Text fontWeight="semibold" color={textColor}>Total Amount:</Text>
+                      <Text fontWeight="semibold" color={textColor}>
+                        Total Amount:
+                      </Text>
                     </GridItem>
                     <GridItem>
-                      <Text color={textColor}>₹{selectedOrder.totalAmount}</Text>
-                    </GridItem>
-
-                    <GridItem>
-                      <Text fontWeight="semibold" color={textColor}>Paid Amount:</Text>
-                    </GridItem>
-                    <GridItem>
-                      <Text color={textColor}>₹{selectedOrder.paidAmount}</Text>
+                      <Text color={textColor}>
+                        ₹{selectedOrder.totalAmount.toLocaleString()}
+                      </Text>
                     </GridItem>
 
                     <GridItem>
-                      <Text fontWeight="semibold" color={textColor}>Payment Status:</Text>
+                      <Text fontWeight="semibold" color={textColor}>
+                        Paid Amount:
+                      </Text>
                     </GridItem>
                     <GridItem>
-                      <Flex align="center" bg={getStatusStyles(selectedOrder.paymentStatus, 'paymentStatus').bg} px={2} py={1} borderRadius="md">
-                        <Text fontSize="sm" color={getStatusStyles(selectedOrder.paymentStatus, 'paymentStatus').color}>
+                      <Text color={textColor}>
+                        ₹{selectedOrder.paidAmount.toLocaleString()}
+                      </Text>
+                    </GridItem>
+
+                    <GridItem>
+                      <Text fontWeight="semibold" color={textColor}>
+                        Payment Status:
+                      </Text>
+                    </GridItem>
+                    <GridItem>
+                      <Flex
+                        align="center"
+                        bg={getStatusStyles(selectedOrder.paymentStatus, 'paymentStatus').bg}
+                        px={2}
+                        py={1}
+                        borderRadius="md"
+                      >
+                        <Text
+                          fontSize="sm"
+                          color={getStatusStyles(selectedOrder.paymentStatus, 'paymentStatus').color}
+                        >
                           {selectedOrder.paymentStatus}
                         </Text>
                       </Flex>
                     </GridItem>
 
                     <GridItem>
-                      <Text fontWeight="semibold" color={textColor}>Hire Status:</Text>
+                      <Text fontWeight="semibold" color={textColor}>
+                        Hire Status:
+                      </Text>
                     </GridItem>
                     <GridItem>
-                      <Flex align="center" bg={getStatusStyles(selectedOrder.hireStatus, 'hireStatus').bg} px={2} py={1} borderRadius="md">
-                        <Text fontSize="sm" color={getStatusStyles(selectedOrder.hireStatus, 'hireStatus').color}>
+                      <Flex
+                        align="center"
+                        bg={getStatusStyles(selectedOrder.hireStatus, 'hireStatus').bg}
+                        px={2}
+                        py={1}
+                        borderRadius="md"
+                      >
+                        <Text
+                          fontSize="sm"
+                          color={getStatusStyles(selectedOrder.hireStatus, 'hireStatus').color}
+                        >
                           {selectedOrder.hireStatus}
                         </Text>
                       </Flex>
                     </GridItem>
 
                     <GridItem>
-                      <Text fontWeight="semibold" color={textColor}>Created At:</Text>
+                      <Text fontWeight="semibold" color={textColor}>
+                        Created At:
+                      </Text>
                     </GridItem>
                     <GridItem>
                       <Text color={textColor}>{selectedOrder.createdAt}</Text>
                     </GridItem>
 
                     <GridItem>
-                      <Text fontWeight="semibold" color={textColor}>Deadline:</Text>
+                      <Text fontWeight="semibold" color={textColor}>
+                        Deadline:
+                      </Text>
                     </GridItem>
                     <GridItem>
                       <Text color={textColor}>{selectedOrder.deadline}</Text>
@@ -612,9 +648,17 @@ export default function OrdersTable() {
                   {selectedOrder.paymentHistory.length > 0 ? (
                     <VStack spacing={3} align="stretch">
                       {selectedOrder.paymentHistory.map((payment, index) => (
-                        <ChakraCard key={index} p={3} boxShadow="sm" borderRadius="md" bg={useColorModeValue('white', 'gray.600')}>
+                        <ChakraCard
+                          key={index}
+                          p={3}
+                          boxShadow="sm"
+                          borderRadius="md"
+                          bg={useColorModeValue('white', 'gray.600')}
+                        >
                           <Text color={textColor}>
-                            <strong>Payment {index + 1}:</strong> ₹{payment.amount} - {payment.description} ({payment.status}) on{' '}
+                            <strong>Payment {index + 1}:</strong> ₹
+                            {payment.amount.toLocaleString()} - {payment.description} (
+                            {payment.status}) on{' '}
                             {new Date(payment.date).toLocaleDateString()}
                           </Text>
                         </ChakraCard>

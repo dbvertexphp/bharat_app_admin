@@ -36,7 +36,7 @@ import {
 } from '@tanstack/react-table';
 import axios from 'axios';
 import * as React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -59,8 +59,9 @@ export default function OrdersTable() {
   const textColor = useColorModeValue('secondaryGray.900', 'white');
   const borderColor = useColorModeValue('gray.200', 'whiteAlpha.100');
   const navigate = useNavigate();
+  const { orderId } = useParams(); // Correctly destructure orderId
 
-  // Fetch orders from API
+  // Fetch order from API
   const baseUrl = process.env.REACT_APP_BASE_URL;
   const token = localStorage.getItem('token');
 
@@ -70,40 +71,44 @@ export default function OrdersTable() {
         if (!baseUrl || !token) {
           throw new Error('Missing base URL or authentication token');
         }
+        if (!orderId) {
+          throw new Error('Missing order ID');
+        }
         const response = await axios.get(
-          `${baseUrl}api/direct-order/getAllDirectOrders`,
+          `${baseUrl}api/direct-order/getDirectOrderWithWorker/${orderId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
         );
-        console.log('API Response (Orders):', response.data);
-        if (!response.data || !Array.isArray(response.data.data)) {
-          throw new Error(
-            'Invalid response format: Expected an array of orders',
-          );
+        console.log('API Response (Order):', response.data);
+        if (!response.data?.data) {
+          throw new Error('Invalid response format: Expected data object');
         }
 
-        const formattedData = response.data.data.map((item) => ({
-          id: item._id || '',
-          orderId: item.razorOrderIdPlatform || '',
-          customerName: item.user_id?.full_name || 'Unknown',
-          serviceProvider: item.service_provider_id?.full_name || 'N/A',
-          totalAmount: item.service_payment?.total_expected || 0,
-          paidAmount: item.service_payment?.amount || 0,
-          remainingAmount: item.remaining_amount?.amount || 0,
-          paymentStatus: item.payment_status || 'Unknown',
-          hireStatus: item.hire_status || 'Unknown',
-          createdAt: item.createdAt
-            ? new Date(item.createdAt).toLocaleDateString()
+        const item = response.data.data;
+        const formattedData = [{
+          id: item.order?._id || '',
+          orderId: item.order?.razorOrderIdPlatform || '',
+          customerName: item.order?.user_id?.full_name || 'Unknown',
+          serviceProvider: item.order?.service_provider_id?.full_name || 'N/A',
+          assignedWorker: item.assignedWorker?.name || 'Not Assigned',
+          totalAmount: item.order?.service_payment?.total_expected || 0,
+          paidAmount: item.order?.service_payment?.amount || 0,
+          remainingAmount: item.order?.service_payment?.remaining_amount || 0,
+          paymentStatus: item.order?.payment_status || 'Unknown',
+          hireStatus: item.order?.hire_status || 'Unknown',
+          createdAt: item.order?.createdAt
+            ? new Date(item.order.createdAt).toLocaleDateString()
             : '',
-          address: item.address,
-          title: item.title,
-          description: item.description,
-          deadline: item.deadline
-            ? new Date(item.deadline).toLocaleDateString()
+          address: item.order?.address || '',
+          title: item.order?.title || '',
+          description: item.order?.description || '',
+          deadline: item.order?.deadline
+            ? new Date(item.order.deadline).toLocaleDateString()
             : '',
-          paymentHistory: item.service_payment?.payment_history || [],
-        }));
+          paymentHistory: item.order?.service_payment?.payment_history || [],
+          assignedWorkerDetails: item.assignedWorker || null,
+        }];
 
         setData(formattedData);
         setLoading(false);
@@ -120,14 +125,14 @@ export default function OrdersTable() {
           localStorage.removeItem('token');
           navigate('/');
         } else {
-          setError(err.message || 'Failed to fetch orders');
+          setError(err.message || 'Failed to fetch order');
           setLoading(false);
         }
       }
     };
 
     fetchOrders();
-  }, [navigate]);
+  }, [navigate, orderId]);
 
   // Handle view details click
   const handleViewDetails = (order) => {
@@ -155,6 +160,17 @@ export default function OrdersTable() {
         case 'pending':
           return { bg: 'yellow.100', color: 'yellow.800' };
         case 'failed':
+          return { bg: 'red.100', color: 'red.800' };
+        default:
+          return { bg: 'gray.100', color: 'gray.800' };
+      }
+    } else if (type === 'verifyStatus') {
+      switch (status) {
+        case 'approved':
+          return { bg: 'green.100', color: 'green.800' };
+        case 'pending':
+          return { bg: 'yellow.100', color: 'yellow.800' };
+        case 'rejected':
           return { bg: 'red.100', color: 'red.800' };
         default:
           return { bg: 'gray.100', color: 'gray.800' };
@@ -214,6 +230,26 @@ export default function OrdersTable() {
           color="gray.400"
         >
           SERVICE PROVIDER
+        </Text>
+      ),
+      cell: (info) => (
+        <Flex align="center">
+          <Text color={textColor} fontSize="sm" fontWeight="700">
+            {info.getValue()}
+          </Text>
+        </Flex>
+      ),
+    }),
+    columnHelper.accessor('assignedWorker', {
+      id: 'assignedWorker',
+      header: () => (
+        <Text
+          justifyContent="space-between"
+          align="center"
+          fontSize={{ sm: '10px', lg: '12px' }}
+          color="gray.400"
+        >
+          ASSIGNED WORKER
         </Text>
       ),
       cell: (info) => (
@@ -434,7 +470,7 @@ export default function OrdersTable() {
             fontWeight="700"
             lineHeight="100%"
           >
-            Orders Table
+            Order Details
           </Text>
         </Flex>
         <Box>
@@ -496,7 +532,7 @@ export default function OrdersTable() {
 
       {/* Details Modal */}
       {selectedOrder && (
-        <Modal isOpen={isDetailsOpen} onClose={onDetailsClose} size="lg">
+        <Modal isOpen={isDetailsOpen} onClose={onDetailsClose} size="xl">
           <ModalOverlay />
           <ModalContent borderRadius="xl" boxShadow="2xl" p={4} bg={useColorModeValue('white', 'gray.800')}>
             <ModalHeader fontSize="2xl" fontWeight="bold" color={textColor} textAlign="center">
@@ -533,6 +569,13 @@ export default function OrdersTable() {
                     </GridItem>
 
                     <GridItem>
+                      <Text fontWeight="semibold" color={textColor}>Assigned Worker:</Text>
+                    </GridItem>
+                    <GridItem>
+                      <Text color={textColor}>{selectedOrder.assignedWorker}</Text>
+                    </GridItem>
+
+                    <GridItem>
                       <Text fontWeight="semibold" color={textColor}>Title:</Text>
                     </GridItem>
                     <GridItem>
@@ -565,6 +608,13 @@ export default function OrdersTable() {
                     </GridItem>
                     <GridItem>
                       <Text color={textColor}>₹{selectedOrder.paidAmount}</Text>
+                    </GridItem>
+
+                    <GridItem>
+                      <Text fontWeight="semibold" color={textColor}>Remaining Amount:</Text>
+                    </GridItem>
+                    <GridItem>
+                      <Text color={textColor}>₹{selectedOrder.remainingAmount}</Text>
                     </GridItem>
 
                     <GridItem>
@@ -622,6 +672,65 @@ export default function OrdersTable() {
                     </VStack>
                   ) : (
                     <Text color={textColor}>No payment history available</Text>
+                  )}
+
+                  <Divider />
+
+                  <Text fontWeight="bold" fontSize="lg" color={textColor}>
+                    Assigned Worker Details
+                  </Text>
+                  {selectedOrder.assignedWorkerDetails ? (
+                    <ChakraCard p={3} boxShadow="sm" borderRadius="md" bg={useColorModeValue('white', 'gray.600')}>
+                      <VStack spacing={2} align="stretch">
+                        <Text color={textColor}>
+                          <strong>Name:</strong> {selectedOrder.assignedWorkerDetails.name}
+                        </Text>
+                        <Text color={textColor}>
+                          <strong>Phone:</strong> {selectedOrder.assignedWorkerDetails.phone}
+                        </Text>
+                        <Text color={textColor}>
+                          <strong>Address:</strong> {selectedOrder.assignedWorkerDetails.address}
+                        </Text>
+                        <Text color={textColor}>
+                          <strong>Date of Birth:</strong>{' '}
+                          {new Date(selectedOrder.assignedWorkerDetails.dob).toLocaleDateString()}
+                        </Text>
+                        <Text color={textColor}>
+                          <strong>Verification Status:</strong>{' '}
+                          <Flex
+                            as="span"
+                            align="center"
+                            bg={getStatusStyles(selectedOrder.assignedWorkerDetails.verifyStatus, 'verifyStatus').bg}
+                            px={2}
+                            py={1}
+                            borderRadius="md"
+                            display="inline-flex"
+                          >
+                            <Text
+                              fontSize="sm"
+                              color={getStatusStyles(selectedOrder.assignedWorkerDetails.verifyStatus, 'verifyStatus').color}
+                            >
+                              {selectedOrder.assignedWorkerDetails.verifyStatus}
+                            </Text>
+                          </Flex>
+                        </Text>
+                        {selectedOrder.assignedWorkerDetails.image && (
+                          <Box>
+                            <Text color={textColor} fontWeight="semibold">Worker Image:</Text>
+                            <Box
+                              as="img"
+                              src={`${baseUrl}${selectedOrder.assignedWorkerDetails.image}`}
+                              alt="Worker Image"
+                              maxW="150px"
+                              borderRadius="md"
+                              mt={2}
+                            />
+                          </Box>
+                        )}
+                      </VStack>
+                    </ChakraCard>
+                  ) : (
+                    <Text color={textColor}>No assigned worker details available</Text>
                   )}
                 </VStack>
               </ChakraCard>
